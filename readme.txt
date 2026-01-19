@@ -3,7 +3,7 @@ Contributors:       mapgear
 Tags:               map,geoapps,location
 Tested up to:       6.2.2
 Requires at least:  5.8.0
-Requires PHP:       5.6.0
+Requires PHP:       7.4.0
 Stable tag:         1.1.0
 License:            GPLv2
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html

@@ -4,6 +4,7 @@
  * @see https://developer.wordpress.org/block-editor/packages/packages-i18n/
  */
 import { __ } from '@wordpress/i18n';
+import { useEffect, useState } from '@wordpress/element';
 
 /**
  * React hook that is used to mark the block wrapper element.
@@ -31,28 +32,52 @@ import { Button, PanelBody, TextControl } from '@wordpress/components';
  * @return {WPElement} Element to render.
  */
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const [tenantUrl, setTenantUrl] = React.useState(attributes.tenant_url);
-	const [mapId, setMapId] = React.useState(attributes.map_id);
+	const [tenantUrl, setTenantUrl] = useState(attributes.tenant_url || '');
+	const [mapId, setMapId] = useState(attributes.map_id || '');
 
-	React.useEffect(() => {
+	useEffect(() => {
 		loadMap();
-	}, []);
+
+		return () => {
+			// Clean up map instance if the library is available
+			if (window?.geoapps?.RemoveMap) {
+				window.geoapps.RemoveMap(domId);
+			}
+		};
+	}, [tenantUrl, mapId, attributes.width, attributes.height]);
 
 	const domId = 'mv_' + clientId;
 	const loadMap = () => {
-		// Clear map
-		document.getElementById(domId).innerHTML = '';
-		geoapps.RemoveMap(domId);
+		const container = document.getElementById(domId);
+		if (!container) {
+			return;
+		}
 
-		// Verify if tenant Url is set, otherwise do nothing
-		if (tenantUrl) {
-			// Initialize new map
-			geoapps.Initialize(tenantUrl);
-			var map = geoapps.AddMap(domId, mapId);
-			if (map) {
+		// Nothing to load yet
+		if (!tenantUrl || !mapId) {
+			container.innerHTML = '';
+			return;
+		}
+
+		// Clear map
+		container.innerHTML = '';
+
+		if (window?.geoapps?.RemoveMap) {
+			window.geoapps.RemoveMap(domId);
+		}
+
+		// Verify external library availability
+		if (window?.geoapps?.Initialize && window?.geoapps?.AddMap) {
+			window.geoapps.Initialize(tenantUrl);
+			const map = window.geoapps.AddMap(domId, mapId);
+			if (map?.Controls?.AddZoomControls) {
 				map.Controls.AddZoomControls();
 			}
+			return;
 		}
+
+		// If library is not yet loaded, retry shortly
+		setTimeout(loadMap, 300);
 	};
 
 	const onChangeTenantUrl = (tenantUrl) => {

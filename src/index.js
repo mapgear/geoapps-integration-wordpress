@@ -28,4 +28,5 @@ import icons from './icons';
 registerBlockType('mapgear/geoapps-map', {
 	icon: icons.geoapps,
 	edit: Edit,
+	save: () => null,
 });
